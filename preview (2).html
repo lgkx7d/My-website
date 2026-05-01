@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minimal Interstellar Background</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #02030a;
+      font-family: Arial, sans-serif;
+    }
+
+    .scene {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      perspective: 900px;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(35, 50, 90, 0.16), transparent 38%),
+        radial-gradient(circle at 75% 25%, rgba(80, 80, 120, 0.08), transparent 28%),
+        linear-gradient(180deg, #010208 0%, #03040c 45%, #000000 100%);
+    }
+
+    .space {
+      position: absolute;
+      inset: -8%;
+      transform-style: preserve-3d;
+      transition: transform 0.08s linear;
+    }
+
+    .vignette {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at center, transparent 35%, rgba(0, 0, 0, 0.55) 100%);
+      z-index: 20;
+    }
+
+    .soft-depth {
+      position: absolute;
+      width: 70vw;
+      height: 70vw;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) translateZ(-300px);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(90, 120, 180, 0.09), transparent 62%);
+      filter: blur(18px);
+    }
+
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.75);
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.28);
+    }
+
+    .layer-back {
+      transform: translateZ(-420px) scale(1.45);
+    }
+
+    .layer-mid {
+      transform: translateZ(-180px) scale(1.18);
+    }
+
+    .layer-front {
+      transform: translateZ(40px) scale(0.95);
+    }
+
+    .layer {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      transition: transform 0.08s linear;
+    }
+
+    .cursor-glow {
+      position: fixed;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(130, 170, 255, 0.10), transparent 68%);
+      filter: blur(28px);
+      z-index: 10;
+      opacity: 0.65;
+    }
+
+    .center-shadow {
+      position: absolute;
+      width: 36vw;
+      height: 36vw;
+      min-width: 320px;
+      min-height: 320px;
+      left: 50%;
+      top: 52%;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle, rgba(0, 0, 0, 0.55) 0%, rgba(0, 0, 0, 0.25) 32%, transparent 66%);
+      opacity: 0.55;
+      transition: transform 0.08s linear;
+    }
+
+    .demo-label {
+      position: fixed;
+      left: 28px;
+      bottom: 24px;
+      color: rgba(255, 255, 255, 0.35);
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      z-index: 30;
+      user-select: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="scene">
+    <div class="space" id="space">
+      <div class="soft-depth"></div>
+
+      <div class="layer layer-back" id="back"></div>
+      <div class="layer layer-mid" id="mid"></div>
+      <div class="layer layer-front" id="front"></div>
+
+      <div class="center-shadow" id="centerShadow"></div>
+    </div>
+  </div>
+
+  <div class="cursor-glow" id="cursorGlow"></div>
+  <div class="vignette"></div>
+  <div class="demo-label">minimal interstellar background</div>
+
+  <script>
+    const space = document.getElementById("space");
+    const back = document.getElementById("back");
+    const mid = document.getElementById("mid");
+    const front = document.getElementById("front");
+    const cursorGlow = document.getElementById("cursorGlow");
+    const centerShadow = document.getElementById("centerShadow");
+
+    function createStars(layer, count, minSize, maxSize, opacity) {
+      for (let i = 0; i < count; i++) {
+        const star = document.createElement("span");
+        const size = Math.random() * (maxSize - minSize) + minSize;
+
+        star.className = "star";
+        star.style.width = size + "px";
+        star.style.height = size + "px";
+        star.style.left = Math.random() * 100 + "%";
+        star.style.top = Math.random() * 100 + "%";
+        star.style.opacity = Math.random() * opacity + 0.08;
+
+        layer.appendChild(star);
+      }
+    }
+
+    // Very limited stars. Keep it subtle.
+    createStars(back, 18, 0.6, 1.1, 0.28);
+    createStars(mid, 11, 0.8, 1.4, 0.35);
+    createStars(front, 6, 1.0, 1.7, 0.42);
+
+    let targetX = 0;
+    let targetY = 0;
+    let currentX = 0;
+    let currentY = 0;
+
+    window.addEventListener("mousemove", (event) => {
+      targetX = (event.clientX / window.innerWidth - 0.5) * 2;
+      targetY = (event.clientY / window.innerHeight - 0.5) * 2;
+
+      cursorGlow.style.left = event.clientX + "px";
+      cursorGlow.style.top = event.clientY + "px";
+    });
+
+    function animate() {
+      currentX += (targetX - currentX) * 0.07;
+      currentY += (targetY - currentY) * 0.07;
+
+      const rotateX = currentY * 5;
+      const rotateY = -currentX * 7;
+
+      space.style.transform =
+        `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.04)`;
+
+      back.style.marginLeft = currentX * -10 + "px";
+      back.style.marginTop = currentY * -8 + "px";
+
+      mid.style.marginLeft = currentX * -24 + "px";
+      mid.style.marginTop = currentY * -18 + "px";
+
+      front.style.marginLeft = currentX * -42 + "px";
+      front.style.marginTop = currentY * -32 + "px";
+
+      centerShadow.style.transform =
+        `translate(calc(-50% + ${currentX * 22}px), calc(-50% + ${currentY * 16}px))`;
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
